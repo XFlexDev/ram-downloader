@@ -1,0 +1,38 @@
+name: Build Unsigned Simulator IPA
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build App
+        run: |
+          xcodebuild build \
+            -project "RAM Downloader.xcodeproj" \
+            -scheme "RAM Downloader" \
+            -sdk iphonesimulator \
+            -configuration Debug \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            -derivedDataPath build
+
+      - name: Package IPA
+        run: |
+          mkdir Payload
+          cp -r build/Build/Products/Debug-iphonesimulator/*.app Payload/
+          zip -r RAM_Downloader_Simulator.ipa Payload
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: RAM-Downloader-Unsigned-IPA
+          path: RAM_Downloader_Simulator.ipa
